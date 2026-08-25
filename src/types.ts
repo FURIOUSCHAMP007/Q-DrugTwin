@@ -146,6 +146,18 @@ export interface ScenarioSimulationResult {
 export interface QuboOptimizationResult {
   optimizationMethod: 'hybrid' | 'quantum_simulated' | 'classical_annealing';
   bestScenarioId: string;
+  optimalEnergy: number;
+  optimalBitstring: string;
+  suitabilityScore: number;
+  quantumAdvantageRatio: number;
+  selectedMedications: Medication[];
+  sampledStates: {
+    state: string; // e.g. "|1010⟩"
+    medicationNames: string[];
+    energy: number;
+    score: number;
+    amplitude?: number;
+  }[];
   rankedScenarios: {
     scenarioId: string;
     name: string;

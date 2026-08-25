@@ -112,10 +112,14 @@ export class ApiService {
     patient: PatientDigitalTwinState,
     candidates: Medication[],
     constraints: {
-      maxAdverseRisk: number;
-      interactionTolerance: 'strict' | 'moderate' | 'relaxed';
-      maxAdditionalDrugs: number;
-      penaltyMultiplier: number;
+      maxAdverseRisk?: number;
+      interactionTolerance?: 'strict' | 'moderate' | 'relaxed';
+      maxAdditionalDrugs?: number;
+      penaltyMultiplier?: number;
+      alphaEfficacy?: number;
+      betaToxicity?: number;
+      gammaDdiPenalty?: number;
+      targetMedicationCount?: number;
     }
   ): Promise<QuboOptimizationResult> {
     try {
@@ -130,7 +134,9 @@ export class ApiService {
       });
       if (res.ok) {
         const data = await res.json();
-        return data.optimization;
+        if (data.optimization) {
+          return data.optimization;
+        }
       }
     } catch {
       // fallback
@@ -207,13 +213,20 @@ export class ApiService {
       targetMedicationCount?: number;
     }
   ): Promise<QuboOptimizationResult> {
-    const penaltyMultiplier = weights.betaToxicity ?? (weights.toxicityPenalty ? weights.toxicityPenalty / 50 : 1.5);
-    const maxAdditionalDrugs = weights.targetMedicationCount ?? (weights.maxDrugs || 2);
+    const alphaEfficacy = weights.alphaEfficacy ?? (weights.efficacyWeight ? weights.efficacyWeight / 50 : 1.0);
+    const betaToxicity = weights.betaToxicity ?? (weights.toxicityPenalty ? weights.toxicityPenalty / 50 : 1.2);
+    const gammaDdiPenalty = weights.gammaDdiPenalty ?? (weights.interactionPenalty ? weights.interactionPenalty / 50 : 1.5);
+    const targetMedicationCount = weights.targetMedicationCount ?? (weights.maxDrugs || 2);
+
     return this.runQuboOptimization(patient, candidates, {
       maxAdverseRisk: 0.25,
-      interactionTolerance: (weights.gammaDdiPenalty ?? 1.0) > 1.2 ? 'strict' : 'moderate',
-      maxAdditionalDrugs,
-      penaltyMultiplier
+      interactionTolerance: gammaDdiPenalty > 1.2 ? 'strict' : 'moderate',
+      maxAdditionalDrugs: targetMedicationCount,
+      penaltyMultiplier: betaToxicity,
+      alphaEfficacy,
+      betaToxicity,
+      gammaDdiPenalty,
+      targetMedicationCount
     });
   }
 }

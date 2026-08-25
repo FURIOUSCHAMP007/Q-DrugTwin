@@ -151,8 +151,12 @@ async function startServer() {
     const config = {
       maxAdverseRisk: constraints?.maxAdverseRisk ?? 0.25,
       interactionTolerance: constraints?.interactionTolerance ?? 'moderate',
-      maxAdditionalDrugs: constraints?.maxAdditionalDrugs ?? 2,
-      penaltyMultiplier: constraints?.penaltyMultiplier ?? 1.0
+      maxAdditionalDrugs: constraints?.maxAdditionalDrugs ?? constraints?.targetMedicationCount ?? 2,
+      penaltyMultiplier: constraints?.penaltyMultiplier ?? 1.2,
+      alphaEfficacy: constraints?.alphaEfficacy ?? 1.0,
+      betaToxicity: constraints?.betaToxicity ?? 1.2,
+      gammaDdiPenalty: constraints?.gammaDdiPenalty ?? 1.5,
+      targetMedicationCount: constraints?.targetMedicationCount ?? 2
     };
 
     const optimizationResult = formulateQuboAndOptimize(patient, pool, config);
