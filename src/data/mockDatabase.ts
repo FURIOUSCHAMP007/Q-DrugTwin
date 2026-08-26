@@ -49,10 +49,96 @@ export const INITIAL_PATIENTS: PatientDigitalTwinState[] = [
       diastolicBp: 88
     },
     genomics: [
-      { gene: 'CYP2C9', phenotype: 'Intermediate Metabolizer', diplotype: '*1/*3', clinicalSignificance: 'Reduced clearance of Sulfonylureas and ARBs' },
-      { gene: 'CYP2D6', phenotype: 'Normal Metabolizer', diplotype: '*1/*1', clinicalSignificance: 'Standard clearance for beta-blockers' },
-      { gene: 'SLCO1B1', phenotype: 'Intermediate Function', diplotype: '*1/*5', clinicalSignificance: 'Increased risk of Statin-induced myopathy with high-dose Simvastatin' }
+      { gene: 'CYP2C9', phenotype: 'Intermediate Metabolizer', diplotype: '1/3', clinicalSignificance: 'Reduced clearance of Sulfonylureas and ARBs' },
+      { gene: 'CYP2D6', phenotype: 'Normal Metabolizer', diplotype: '1/1', clinicalSignificance: 'Standard clearance for beta-blockers' },
+      { gene: 'SLCO1B1', phenotype: 'Intermediate Function', diplotype: '1/5', clinicalSignificance: 'Increased risk of Statin-induced myopathy with high-dose Simvastatin' }
     ],
+    genomicProfile: {
+      sequencingTechnology: 'Targeted NGS Pharmacogenomics Panel (Illumina NovaSeq 6000)',
+      panelVersion: 'PGx-Clinical-Core v4.2',
+      sampleDate: '2024-11-14',
+      labAccreditation: 'CLIA / CAP Accredited',
+      dnaExtractionYield: '99.8% Call Rate',
+      markers: [
+        {
+          gene: 'CYP2C9',
+          diplotype: '*1/*3',
+          rsId: 'rs1057910',
+          phenotype: 'Intermediate Metabolizer',
+          metabolizerCategory: 'intermediate',
+          activityScore: 1.0,
+          affectedDrugClasses: ['Sulfonylureas (Glipizide/Glimepiride)', 'ARBs (Losartan)', 'NSAIDs', 'Warfarin'],
+          impactedEnzymesOrTransporters: 'Phase I Cytochrome P450 2C9 Monooxygenase',
+          clinicalSummary: 'Variant allele *3 has ~5% activity of wildtype *1. Results in 50% reduced hepatic clearance of sulfonylureas and prolonged active drug exposure.',
+          cpicGuidelineLevel: 'CPIC Level 1A',
+          fdaLabelingActionable: true,
+          metabolismImpact: 'Impaired Clearance (Toxicity Risk)'
+        },
+        {
+          gene: 'CYP2D6',
+          diplotype: '*1/*1',
+          rsId: 'rs3892097 (wt)',
+          phenotype: 'Normal (Extensive) Metabolizer',
+          metabolizerCategory: 'normal',
+          activityScore: 2.0,
+          affectedDrugClasses: ['Beta-Blockers (Metoprolol/Carvedilol)', 'Codeine / Tramadol', 'SSRIs'],
+          impactedEnzymesOrTransporters: 'Phase I Cytochrome P450 2D6 Monooxygenase',
+          clinicalSummary: 'Wild-type homozygous alleles ensure expected pharmacokinetics and standard metabolic clearance rates.',
+          cpicGuidelineLevel: 'CPIC Level 1A',
+          fdaLabelingActionable: false,
+          metabolismImpact: 'Normal Baseline Metabolism'
+        },
+        {
+          gene: 'SLCO1B1',
+          diplotype: '*1/*5',
+          rsId: 'rs4149056 (c.521T>C)',
+          phenotype: 'Decreased Function (Intermediate Transporter)',
+          metabolizerCategory: 'intermediate',
+          activityScore: 1.0,
+          affectedDrugClasses: ['Statins (Simvastatin, Atorvastatin, Rosuvastatin)'],
+          impactedEnzymesOrTransporters: 'Organic Anion-Transporting Polypeptide 1B1 (OATP1B1)',
+          clinicalSummary: 'Single *5 loss-of-function allele reduces hepatic statin influx, increasing systemic statin AUC by 2-fold and elevating myopathy risk.',
+          cpicGuidelineLevel: 'CPIC Level 1A',
+          fdaLabelingActionable: true,
+          metabolismImpact: 'Altered Hepatic Influx'
+        },
+        {
+          gene: 'CYP2C19',
+          diplotype: '*1/*1',
+          rsId: 'rs4244285 (wt)',
+          phenotype: 'Normal Metabolizer',
+          metabolizerCategory: 'normal',
+          activityScore: 2.0,
+          affectedDrugClasses: ['Proton Pump Inhibitors (Omeprazole)', 'Clopidogrel', 'Citalopram'],
+          impactedEnzymesOrTransporters: 'Phase I Cytochrome P450 2C19',
+          clinicalSummary: 'Normal bioactivation of clopidogrel to active thiol metabolite; expected elimination of PPIs.',
+          cpicGuidelineLevel: 'CPIC Level 1A',
+          fdaLabelingActionable: false,
+          metabolismImpact: 'Normal Baseline Metabolism'
+        },
+        {
+          gene: 'VKORC1',
+          diplotype: '-1639G>A (G/A)',
+          rsId: 'rs9923231',
+          phenotype: 'Intermediate Warfarin Sensitivity',
+          metabolizerCategory: 'altered',
+          affectedDrugClasses: ['Vitamin K Antagonists (Warfarin)'],
+          impactedEnzymesOrTransporters: 'Vitamin K Epoxide Reductase Complex Subunit 1',
+          clinicalSummary: 'Heterozygous G/A promoter polymorphism lowers target enzyme expression, requiring ~25% lower Warfarin dose.',
+          cpicGuidelineLevel: 'CPIC Level 1A',
+          fdaLabelingActionable: true,
+          metabolismImpact: 'Altered Hepatic Influx'
+        }
+      ],
+      primaryMetabolizerSummary: {
+        poorMetabolizersCount: 0,
+        intermediateCount: 2,
+        ultraRapidCount: 0,
+        normalCount: 2
+      },
+      highRiskDrugsToAvoid: ['High-Dose Simvastatin (80mg)', 'High-Dose Glimepiride'],
+      doseAdjustmentRecommended: ['Atorvastatin (cap at 20-40mg)', 'Glipizide (initiate at 50% dose)']
+    },
     currentMedications: [
       {
         id: 'med_metformin',
@@ -131,6 +217,44 @@ export const INITIAL_PATIENTS: PatientDigitalTwinState[] = [
         mechanismSummary: 'Relaxes vascular smooth muscle causing peripheral arterial vasodilation.'
       }
     ],
+    dosageToleranceThresholds: [
+      {
+        medicationName: 'Metformin',
+        maxDailyDoseMg: 1000,
+        unit: 'mg',
+        sourceReason: 'Renal Clearance Limit (eGFR: 58 mL/min)',
+        limitingFactor: 'renal_clearance',
+        historicalReaction: 'GI cramping and elevated blood lactate at 2000mg/day in 2023',
+        guidelineReference: 'ADA / KDIGO 2024 CKD Dosing: Max 1000mg daily if eGFR 45-59 mL/min'
+      },
+      {
+        medicationName: 'Atorvastatin',
+        maxDailyDoseMg: 40,
+        unit: 'mg',
+        sourceReason: 'SLCO1B1 *1/*5 Intermediate Transporter',
+        limitingFactor: 'pharmacogenomic_variant',
+        historicalReaction: 'Bilateral thigh myalgia with CPK elevation at 80mg/day',
+        guidelineReference: 'CPIC Guideline for Statins and SLCO1B1 Genotype'
+      },
+      {
+        medicationName: 'Glipizide',
+        maxDailyDoseMg: 5,
+        unit: 'mg',
+        sourceReason: 'CYP2C9 *1/*3 Intermediate Metabolizer (50% clearance)',
+        limitingFactor: 'pharmacogenomic_variant',
+        historicalReaction: 'Nocturnal hypoglycemic episode (glucose 52 mg/dL) at 10mg/day',
+        guidelineReference: 'CPIC Level 1A: 50% dose reduction recommended for CYP2C9 intermediate metabolizers'
+      },
+      {
+        medicationName: 'Spironolactone',
+        maxDailyDoseMg: 25,
+        unit: 'mg',
+        sourceReason: 'Hyperkalemia vulnerability with baseline K+ 4.8 mEq/L and eGFR 58',
+        limitingFactor: 'renal_clearance',
+        historicalReaction: 'Potassium spike to 5.4 mEq/L during dual RAAS escalation',
+        guidelineReference: 'AHA/ACC HF & CKD Potassium Monitoring Threshold'
+      }
+    ],
     treatmentComplexity: 'HIGH',
     complexityScore: 78,
     longitudinalHistory: [
@@ -186,9 +310,68 @@ export const INITIAL_PATIENTS: PatientDigitalTwinState[] = [
       diastolicBp: 84
     },
     genomics: [
-      { gene: 'CYP2C19', phenotype: 'Poor Metabolizer', diplotype: '*2/*2', clinicalSignificance: 'Markedly reduced bioactivation of Clopidogrel, reduced clearance of PPIs' },
-      { gene: 'CYP3A4', phenotype: 'Normal Metabolizer', diplotype: '*1/*1', clinicalSignificance: 'Standard metabolic kinetics' }
+      { gene: 'CYP2C19', phenotype: 'Poor Metabolizer', diplotype: '2/2', clinicalSignificance: 'Markedly reduced bioactivation of Clopidogrel, reduced clearance of PPIs' },
+      { gene: 'CYP3A4', phenotype: 'Normal Metabolizer', diplotype: '1/1', clinicalSignificance: 'Standard metabolic kinetics' }
     ],
+    genomicProfile: {
+      sequencingTechnology: 'Targeted NGS Pharmacogenomics Panel (Illumina NovaSeq 6000)',
+      panelVersion: 'PGx-Clinical-Core v4.2',
+      sampleDate: '2024-10-02',
+      labAccreditation: 'CLIA / CAP Accredited',
+      dnaExtractionYield: '99.5% Call Rate',
+      markers: [
+        {
+          gene: 'CYP2C19',
+          diplotype: '*2/*2',
+          rsId: 'rs4244285 (c.681G>A)',
+          phenotype: 'Poor Metabolizer (Homozygous Loss-of-Function)',
+          metabolizerCategory: 'poor',
+          activityScore: 0.0,
+          affectedDrugClasses: ['Antiplatelets (Clopidogrel)', 'Proton Pump Inhibitors (Omeprazole, Pantoprazole)', 'Antidepressants (Citalopram, Sertraline)'],
+          impactedEnzymesOrTransporters: 'Phase I Cytochrome P450 2C19 Monooxygenase',
+          clinicalSummary: 'Complete lack of functional CYP2C19 enzyme. Clopidogrel cannot be bioactivated into active metabolite (80% reduction in antiplatelet effect); high risk of stent thrombosis. High PPI exposure.',
+          cpicGuidelineLevel: 'CPIC Level 1A',
+          fdaLabelingActionable: true,
+          metabolismImpact: 'Prodrug Activation Failure'
+        },
+        {
+          gene: 'CYP3A4',
+          diplotype: '*1/*1',
+          rsId: 'rs2740574 (wt)',
+          phenotype: 'Normal Metabolizer',
+          metabolizerCategory: 'normal',
+          activityScore: 2.0,
+          affectedDrugClasses: ['Statins (Atorvastatin, Lovastatin)', 'Calcium Channel Blockers (Amlodipine)', 'DOACs'],
+          impactedEnzymesOrTransporters: 'Phase I Cytochrome P450 3A4',
+          clinicalSummary: 'Standard oxidative clearance for major CYP3A4 substrate medications.',
+          cpicGuidelineLevel: 'CPIC Level 1B',
+          fdaLabelingActionable: false,
+          metabolismImpact: 'Normal Baseline Metabolism'
+        },
+        {
+          gene: 'SLCO1B1',
+          diplotype: '*1/*1',
+          rsId: 'rs4149056 (T/T wt)',
+          phenotype: 'Normal Function Transporter',
+          metabolizerCategory: 'normal',
+          activityScore: 2.0,
+          affectedDrugClasses: ['Statins (Rosuvastatin, Pravastatin, Pitavastatin)'],
+          impactedEnzymesOrTransporters: 'Organic Anion-Transporting Polypeptide 1B1',
+          clinicalSummary: 'Normal hepatic statin uptake; standard risk of statin-induced myopathy.',
+          cpicGuidelineLevel: 'CPIC Level 1A',
+          fdaLabelingActionable: false,
+          metabolismImpact: 'Normal Baseline Metabolism'
+        }
+      ],
+      primaryMetabolizerSummary: {
+        poorMetabolizersCount: 1,
+        intermediateCount: 0,
+        ultraRapidCount: 0,
+        normalCount: 2
+      },
+      highRiskDrugsToAvoid: ['Clopidogrel (Plavix) - Resistance Risk', 'Standard Dose Voriconazole'],
+      doseAdjustmentRecommended: ['Omeprazole (reduce dose by 50%)', 'Prasugrel/Ticagrelor preferred over Clopidogrel']
+    },
     currentMedications: [
       {
         id: 'med_rosuvastatin',
@@ -305,8 +488,79 @@ export const INITIAL_PATIENTS: PatientDigitalTwinState[] = [
     },
     genomics: [
       { gene: 'VKORC1', phenotype: 'High Warfarin Sensitivity', diplotype: '-1639G>A', clinicalSignificance: 'Lower initial and maintenance Warfarin dosing requirement' },
-      { gene: 'CYP2C9', phenotype: 'Poor Metabolizer', diplotype: '*3/*3', clinicalSignificance: 'Extremely prolonged half-life of S-warfarin; high bleeding vulnerability' }
+      { gene: 'CYP2C9', phenotype: 'Poor Metabolizer', diplotype: '3/3', clinicalSignificance: 'Extremely prolonged half-life of S-warfarin; high bleeding vulnerability' }
     ],
+    genomicProfile: {
+      sequencingTechnology: 'Targeted NGS Pharmacogenomics Panel (Illumina NovaSeq 6000)',
+      panelVersion: 'PGx-Clinical-Core v4.2',
+      sampleDate: '2024-09-18',
+      labAccreditation: 'CLIA / CAP Accredited',
+      dnaExtractionYield: '99.9% Call Rate',
+      markers: [
+        {
+          gene: 'CYP2C9',
+          diplotype: '*3/*3',
+          rsId: 'rs1057910 (c.1075A>C)',
+          phenotype: 'Poor Metabolizer (Homozygous Variant)',
+          metabolizerCategory: 'poor',
+          activityScore: 0.0,
+          affectedDrugClasses: ['Warfarin', 'Sulfonylureas (Glimepiride/Glipizide)', 'ARBs (Losartan)', 'NSAIDs (Celecoxib)'],
+          impactedEnzymesOrTransporters: 'Phase I Cytochrome P450 2C9 Monooxygenase',
+          clinicalSummary: 'Near-zero CYP2C9 enzyme activity. S-warfarin clearance reduced by ~90%, creating extreme bleeding risk. Losartan active metabolite conversion impaired; sulfonylurea clearance severely blunted.',
+          cpicGuidelineLevel: 'CPIC Level 1A',
+          fdaLabelingActionable: true,
+          metabolismImpact: 'Impaired Clearance (Toxicity Risk)'
+        },
+        {
+          gene: 'VKORC1',
+          diplotype: '-1639G>A (A/A)',
+          rsId: 'rs9923231',
+          phenotype: 'High Warfarin Sensitivity (Homozygous A/A)',
+          metabolizerCategory: 'high-risk',
+          affectedDrugClasses: ['Vitamin K Antagonists (Warfarin)'],
+          impactedEnzymesOrTransporters: 'Vitamin K Epoxide Reductase Complex Subunit 1',
+          clinicalSummary: 'Homozygous A/A genotype results in low target enzyme expression. Synergizes with CYP2C9 *3/*3 to require >70% dose reduction for Warfarin (or DOAC preference).',
+          cpicGuidelineLevel: 'CPIC Level 1A',
+          fdaLabelingActionable: true,
+          metabolismImpact: 'Impaired Clearance (Toxicity Risk)'
+        },
+        {
+          gene: 'CYP2D6',
+          diplotype: '*1/*4',
+          rsId: 'rs3892097 (1846G>A)',
+          phenotype: 'Intermediate Metabolizer',
+          metabolizerCategory: 'intermediate',
+          activityScore: 1.0,
+          affectedDrugClasses: ['Beta-Blockers (Carvedilol, Metoprolol)', 'Antiarrhythmics', 'Opioids'],
+          impactedEnzymesOrTransporters: 'Phase I Cytochrome P450 2D6',
+          clinicalSummary: 'One null allele (*4) causes ~50% reduced clearance of carvedilol and metoprolol; monitor heart rate for excessive bradycardia.',
+          cpicGuidelineLevel: 'CPIC Level 1A',
+          fdaLabelingActionable: true,
+          metabolismImpact: 'Impaired Clearance (Toxicity Risk)'
+        },
+        {
+          gene: 'HLA-B',
+          diplotype: '*58:01 (Negative)',
+          rsId: 'HLA-B*58:01',
+          phenotype: 'Low Risk of Allopurinol SCAR / DRESS',
+          metabolizerCategory: 'normal',
+          affectedDrugClasses: ['Allopurinol'],
+          impactedEnzymesOrTransporters: 'Major Histocompatibility Complex Class I Antigen',
+          clinicalSummary: 'Negative for HLA-B*58:01 allele; standard risk profile for allopurinol-induced severe cutaneous adverse reactions.',
+          cpicGuidelineLevel: 'CPIC Level 1A',
+          fdaLabelingActionable: true,
+          metabolismImpact: 'Normal Baseline Metabolism'
+        }
+      ],
+      primaryMetabolizerSummary: {
+        poorMetabolizersCount: 1,
+        intermediateCount: 1,
+        ultraRapidCount: 0,
+        normalCount: 2
+      },
+      highRiskDrugsToAvoid: ['Warfarin (Coumadin) - Extreme Bleeding Risk', 'High-Dose Sulfonylureas'],
+      doseAdjustmentRecommended: ['Carvedilol (titrate carefully)', 'Apixaban/DOAC preferred over Warfarin']
+    },
     currentMedications: [
       {
         id: 'med_sacubitril_valsartan',
@@ -395,13 +649,51 @@ export const INITIAL_PATIENTS: PatientDigitalTwinState[] = [
         metabolismPathway: ['Oxidized to active oxypurinol; renal excretion'],
         primaryTargets: ['Xanthine Oxidase'],
         halfLifeHours: 15.0,
-        contraindications: ['HLA-B*5801 positivity (high risk SCAR/DRESS)'],
+        contraindications: ['HLA-B 5801 positivity (high risk SCAR/DRESS)'],
         commonAdrs: ['Maculopapular rash', 'Hepatotoxicity', 'Hypersensitivity syndrome'],
         predictedEffectiveness: 78,
         adrRiskScore: 19,
         interactionRiskScore: 22,
         suitabilityScore: 80,
         mechanismSummary: 'Inhibits xanthine oxidase, decreasing uric acid synthesis.'
+      }
+    ],
+    dosageToleranceThresholds: [
+      {
+        medicationName: 'Allopurinol',
+        maxDailyDoseMg: 100,
+        unit: 'mg',
+        sourceReason: 'Severe CKD 3b (eGFR: 36 mL/min)',
+        limitingFactor: 'renal_clearance',
+        historicalReaction: 'Serum oxypurinol accumulation with transaminitis at 200mg/day',
+        guidelineReference: 'ACR Gout Guidelines: Initial dose 50-100mg/day in CKD stage ≥3'
+      },
+      {
+        medicationName: 'Carvedilol',
+        maxDailyDoseMg: 25,
+        unit: 'mg',
+        sourceReason: 'CYP2D6 *1/*4 Intermediate Metabolizer + Baseline HR 58 bpm',
+        limitingFactor: 'cardiac_conduction',
+        historicalReaction: 'Symptomatic bradycardia (HR 44 bpm, dizziness) at 25mg BID',
+        guidelineReference: 'CPIC Guideline for Beta-Blockers and CYP2D6'
+      },
+      {
+        medicationName: 'Sacubitril/Valsartan',
+        maxDailyDoseMg: 100,
+        unit: 'mg',
+        sourceReason: 'Borderline baseline BP (118/74 mmHg) and eGFR 36 mL/min',
+        limitingFactor: 'renal_clearance',
+        historicalReaction: 'Orthostatic hypotension (standing SBP 88 mmHg) when attempting 49/51 mg BID titration',
+        guidelineReference: 'ACC/AHA HF Guidelines: Renal and BP titration ceilings'
+      },
+      {
+        medicationName: 'Spironolactone',
+        maxDailyDoseMg: 12.5,
+        unit: 'mg',
+        sourceReason: 'Severe hyperkalemia vulnerability (baseline K+ 5.1 mEq/L, eGFR 36)',
+        limitingFactor: 'renal_clearance',
+        historicalReaction: 'Serum potassium elevated to 5.8 mEq/L requiring emergency kayexalate',
+        guidelineReference: 'KDIGO 2024: MRA caution when eGFR < 45 or K+ > 5.0'
       }
     ],
     treatmentComplexity: 'CRITICAL',
@@ -456,6 +748,64 @@ export const INITIAL_PATIENTS: PatientDigitalTwinState[] = [
     genomics: [
       { gene: 'ADRB2', phenotype: 'Arg16Gly Polymorphism', diplotype: 'Gly16Gly', clinicalSignificance: 'Potential down-regulation of beta-2 agonist bronchodilator response over time' }
     ],
+    genomicProfile: {
+      sequencingTechnology: 'Targeted NGS Pharmacogenomics Panel (Illumina NovaSeq 6000)',
+      panelVersion: 'PGx-Clinical-Core v4.2',
+      sampleDate: '2024-08-10',
+      labAccreditation: 'CLIA / CAP Accredited',
+      dnaExtractionYield: '99.4% Call Rate',
+      markers: [
+        {
+          gene: 'CYP2C9',
+          diplotype: '*1/*1',
+          rsId: 'rs1057910 (wt)',
+          phenotype: 'Normal Metabolizer',
+          metabolizerCategory: 'normal',
+          activityScore: 2.0,
+          affectedDrugClasses: ['ARBs (Losartan)', 'NSAIDs', 'Warfarin'],
+          impactedEnzymesOrTransporters: 'Phase I Cytochrome P450 2C9',
+          clinicalSummary: 'Normal bioactivation of losartan into its active carboxylic acid metabolite (E-3174).',
+          cpicGuidelineLevel: 'CPIC Level 1A',
+          fdaLabelingActionable: false,
+          metabolismImpact: 'Normal Baseline Metabolism'
+        },
+        {
+          gene: 'ADRB2',
+          diplotype: 'Gly16Gly (c.46A>G)',
+          rsId: 'rs1042713',
+          phenotype: 'Altered Beta-2 Receptor Downregulation',
+          metabolizerCategory: 'altered',
+          affectedDrugClasses: ['Short/Long-Acting Beta-2 Agonists (Albuterol, Formoterol, Salmeterol)'],
+          impactedEnzymesOrTransporters: 'Beta-2 Adrenergic Receptor (ADRB2)',
+          clinicalSummary: 'Homozygous Gly16 variant associated with accelerated receptor tachyphylaxis and reduced bronchoprotective response under chronic SABA use. Anticholinergics (LAMAs like Tiotropium) preferred.',
+          cpicGuidelineLevel: 'CPIC Level 1B',
+          fdaLabelingActionable: true,
+          metabolismImpact: 'Altered Hepatic Influx'
+        },
+        {
+          gene: 'CYP2D6',
+          diplotype: '*1/*2',
+          rsId: 'rs3892097 / rs16947',
+          phenotype: 'Normal (Extensive) Metabolizer',
+          metabolizerCategory: 'normal',
+          activityScore: 2.0,
+          affectedDrugClasses: ['Antitussives (Dextromethorphan)', 'Antidepressants', 'Beta-Blockers'],
+          impactedEnzymesOrTransporters: 'Phase I Cytochrome P450 2D6',
+          clinicalSummary: 'Normal drug elimination kinetics across CYP2D6 substrates.',
+          cpicGuidelineLevel: 'CPIC Level 1A',
+          fdaLabelingActionable: false,
+          metabolismImpact: 'Normal Baseline Metabolism'
+        }
+      ],
+      primaryMetabolizerSummary: {
+        poorMetabolizersCount: 0,
+        intermediateCount: 0,
+        ultraRapidCount: 0,
+        normalCount: 2
+      },
+      highRiskDrugsToAvoid: ['High-frequency SABA monotherapy (prefer LAMA/LABA combo)'],
+      doseAdjustmentRecommended: ['Tiotropium first-line bronchodilator confirmed']
+    },
     currentMedications: [
       {
         id: 'med_tiotropium',
@@ -544,8 +894,67 @@ export const INITIAL_PATIENTS: PatientDigitalTwinState[] = [
       diastolicBp: 78
     },
     genomics: [
-      { gene: 'CYP2C19', phenotype: 'Loss of Function (*2/*17 Intermediate)', diplotype: '*2/*17', clinicalSignificance: 'Caution with Omeprazole + Clopidogrel co-administration due to competitive CYP2C19 inhibition' }
+      { gene: 'CYP2C19', phenotype: 'Loss of Function (2/17 Intermediate)', diplotype: '2/17', clinicalSignificance: 'Caution with Omeprazole + Clopidogrel co-administration due to competitive CYP2C19 inhibition' }
     ],
+    genomicProfile: {
+      sequencingTechnology: 'Targeted NGS Pharmacogenomics Panel (Illumina NovaSeq 6000)',
+      panelVersion: 'PGx-Clinical-Core v4.2',
+      sampleDate: '2024-10-25',
+      labAccreditation: 'CLIA / CAP Accredited',
+      dnaExtractionYield: '99.7% Call Rate',
+      markers: [
+        {
+          gene: 'CYP2C19',
+          diplotype: '*2/*17',
+          rsId: 'rs4244285 (*2) / rs12248560 (*17)',
+          phenotype: 'Intermediate Metabolizer (*2 Loss + *17 Gain)',
+          metabolizerCategory: 'intermediate',
+          activityScore: 1.0,
+          affectedDrugClasses: ['Antiplatelets (Clopidogrel)', 'Proton Pump Inhibitors (Omeprazole)', 'SSRIs (Escitalopram)'],
+          impactedEnzymesOrTransporters: 'Phase I Cytochrome P450 2C19 Monooxygenase',
+          clinicalSummary: 'Compound heterozygote (*2 non-functional, *17 increased transcription). Produces intermediate clopidogrel activation and competitive vulnerability when combined with strong CYP2C19 substrate PPIs like omeprazole.',
+          cpicGuidelineLevel: 'CPIC Level 1A',
+          fdaLabelingActionable: true,
+          metabolismImpact: 'Impaired Clearance (Toxicity Risk)'
+        },
+        {
+          gene: 'CYP2D6',
+          diplotype: '*1/*1',
+          rsId: 'rs3892097 (wt)',
+          phenotype: 'Normal (Extensive) Metabolizer',
+          metabolizerCategory: 'normal',
+          activityScore: 2.0,
+          affectedDrugClasses: ['Beta-Blockers (Metoprolol Succinate)', 'Antiarrhythmics', 'Analgesics'],
+          impactedEnzymesOrTransporters: 'Phase I Cytochrome P450 2D6',
+          clinicalSummary: 'Standard metoprolol elimination rate with predicted normal steady-state plasma concentrations.',
+          cpicGuidelineLevel: 'CPIC Level 1A',
+          fdaLabelingActionable: false,
+          metabolismImpact: 'Normal Baseline Metabolism'
+        },
+        {
+          gene: 'CYP3A4',
+          diplotype: '*1/*1',
+          rsId: 'rs2740574 (wt)',
+          phenotype: 'Normal Metabolizer',
+          metabolizerCategory: 'normal',
+          activityScore: 2.0,
+          affectedDrugClasses: ['Statins', 'Antiplatelet secondary pathways', 'CCBs'],
+          impactedEnzymesOrTransporters: 'Phase I Cytochrome P450 3A4',
+          clinicalSummary: 'Standard substrate transformation kinetics.',
+          cpicGuidelineLevel: 'CPIC Level 1B',
+          fdaLabelingActionable: false,
+          metabolismImpact: 'Normal Baseline Metabolism'
+        }
+      ],
+      primaryMetabolizerSummary: {
+        poorMetabolizersCount: 0,
+        intermediateCount: 1,
+        ultraRapidCount: 0,
+        normalCount: 2
+      },
+      highRiskDrugsToAvoid: ['Omeprazole co-administered with Clopidogrel (switch to Pantoprazole or H2RA)'],
+      doseAdjustmentRecommended: ['Monitor platelet aggregation if continuing Omeprazole']
+    },
     currentMedications: [
       {
         id: 'med_aspirin',
@@ -624,6 +1033,26 @@ export const INITIAL_PATIENTS: PatientDigitalTwinState[] = [
         mechanismSummary: 'Competitively blocks beta-1 adrenergic receptors, reducing myocardial workload.'
       }
     ],
+    dosageToleranceThresholds: [
+      {
+        medicationName: 'Metoprolol Succinate',
+        maxDailyDoseMg: 50,
+        unit: 'mg',
+        sourceReason: 'Resting Heart Rate (56 bpm) & Post-DES Stent Maintenance',
+        limitingFactor: 'cardiac_conduction',
+        historicalReaction: 'Excessive sinus bradycardia (HR 46 bpm) at 100mg/day',
+        guidelineReference: 'ACC/AHA Secondary Prevention CAD Guidelines'
+      },
+      {
+        medicationName: 'Clopidogrel',
+        maxDailyDoseMg: 75,
+        unit: 'mg',
+        sourceReason: 'CYP2C19 *2/*17 Intermediate Bioactivation',
+        limitingFactor: 'pharmacogenomic_variant',
+        historicalReaction: 'Platelet inhibition variability; do not escalate dose without genotype-guided P2Y12 switch',
+        guidelineReference: 'CPIC Guideline for Clopidogrel and CYP2C19'
+      }
+    ],
     treatmentComplexity: 'HIGH',
     complexityScore: 74,
     longitudinalHistory: [
@@ -675,8 +1104,8 @@ export const INITIAL_PATIENTS: PatientDigitalTwinState[] = [
       diastolicBp: 72
     },
     genomics: [
-      { gene: 'TPMT', phenotype: 'Normal Metabolizer', diplotype: '*1/*1', clinicalSignificance: 'Normal clearance for thiopurines' },
-      { gene: 'HLA-DRB1', phenotype: 'Shared Epitope Carrier', diplotype: '*04:01', clinicalSignificance: 'Correlated with aggressive erosive RA phenotype' }
+      { gene: 'TPMT', phenotype: 'Normal Metabolizer', diplotype: '1/1', clinicalSignificance: 'Normal clearance for thiopurines' },
+      { gene: 'HLA-DRB1', phenotype: 'Shared Epitope Carrier', diplotype: '04:01', clinicalSignificance: 'Correlated with aggressive erosive RA phenotype' }
     ],
     currentMedications: [
       {
@@ -716,6 +1145,26 @@ export const INITIAL_PATIENTS: PatientDigitalTwinState[] = [
         interactionRiskScore: 3,
         suitabilityScore: 98,
         mechanismSummary: 'Essential co-factor for nucleotide synthesis and cellular metabolism.'
+      }
+    ],
+    dosageToleranceThresholds: [
+      {
+        medicationName: 'Hydroxychloroquine',
+        maxDailyDoseMg: 400,
+        unit: 'mg',
+        sourceReason: 'Weight-based Retinal Toxicity Ceiling (62 kg body weight)',
+        limitingFactor: 'adverse_event_history',
+        historicalReaction: 'Retinal pigmentary alterations avoided by capping at ≤5 mg/kg/day (<310-400 mg daily)',
+        guidelineReference: 'American Academy of Ophthalmology (AAO) Retinopathy Screening Guidelines'
+      },
+      {
+        medicationName: 'Methotrexate',
+        maxDailyDoseMg: 0,
+        unit: 'mg',
+        sourceReason: 'Prior Grade 3 Transaminitis / Hepatotoxicity',
+        limitingFactor: 'hepatic_metabolism',
+        historicalReaction: 'Severe ALT rise to 185 U/L in 2022 upon escalating to 15mg weekly',
+        guidelineReference: 'ACR Rheumatoid Arthritis Absolute Contraindication after severe DILI'
       }
     ],
     treatmentComplexity: 'MODERATE',

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Activity,
   Cpu,
@@ -9,32 +9,61 @@ import {
   Search,
   Bell,
   SlidersHorizontal,
-  CheckCircle2
+  CheckCircle2,
+  Radio,
+  Globe,
+  AlertTriangle,
+  ShieldAlert,
+  ArrowRight,
+  X
 } from 'lucide-react';
-import { PatientDigitalTwinState } from '../../types';
+import { PatientDigitalTwinState, DrugInteraction } from '../../types';
 import { NavigationTab } from './Sidebar';
+import { analyzePatientRiskAlerts, analyzeCohortRiskAlerts } from '../../utils/riskNotificationAnalyzer';
 
 interface HeaderProps {
   activePatient: PatientDigitalTwinState;
   patients: PatientDigitalTwinState[];
+  interactions?: DrugInteraction[];
   onSelectPatient: (p: PatientDigitalTwinState) => void;
   onOpenGuidedDemo: () => void;
   onOpenAddPatient: () => void;
+  onOpenLiveVoice?: () => void;
+  onOpenSearchGrounding?: () => void;
   onNavigateHome?: () => void;
+  onNavigateTab?: (tab: string) => void;
   activeView: string;
 }
 
-export const Header: React.FC<HeaderProps> = ({
+export const Header = React.memo<HeaderProps>(({
   activePatient,
   patients,
+  interactions = [],
   onSelectPatient,
   onOpenGuidedDemo,
   onOpenAddPatient,
+  onOpenLiveVoice,
+  onOpenSearchGrounding,
   onNavigateHome,
+  onNavigateTab,
   activeView
 }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  const activeAlerts = useMemo(
+    () => analyzePatientRiskAlerts(activePatient, interactions),
+    [activePatient, interactions]
+  );
+
+  const cohortAlerts = useMemo(
+    () => analyzeCohortRiskAlerts(patients, interactions),
+    [patients, interactions]
+  );
+
+  const criticalCount = activeAlerts.filter((a) => a.severity === 'critical').length;
+  const highCount = activeAlerts.filter((a) => a.severity === 'high').length;
 
   const handleExportJson = () => {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(activePatient, null, 2));
@@ -45,6 +74,7 @@ export const Header: React.FC<HeaderProps> = ({
     downloadAnchor.click();
     downloadAnchor.remove();
   };
+
 
   return (
     <header className="h-16 bg-white/95 backdrop-blur-xl border-b border-slate-200/80 px-4 lg:px-6 flex items-center justify-between sticky top-0 z-30 shadow-xs">
@@ -168,6 +198,30 @@ export const Header: React.FC<HeaderProps> = ({
           )}
         </div>
 
+        {/* Live Voice API Button */}
+        {onOpenLiveVoice && (
+          <button
+            onClick={onOpenLiveVoice}
+            title="Live Clinical Voice Consultation (gemini-3.1-flash-live-preview)"
+            className="px-3 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-700 font-bold text-xs transition-all flex items-center space-x-1.5 shadow-xs"
+          >
+            <Radio className="w-3.5 h-3.5 text-purple-600 animate-pulse" />
+            <span className="hidden lg:inline">Live Voice</span>
+          </button>
+        )}
+
+        {/* Google Search Grounding Button */}
+        {onOpenSearchGrounding && (
+          <button
+            onClick={onOpenSearchGrounding}
+            title="Google Search Grounding Evidence Engine (gemini-3.7-flash)"
+            className="px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 font-bold text-xs transition-all flex items-center space-x-1.5 shadow-xs"
+          >
+            <Globe className="w-3.5 h-3.5 text-blue-600" />
+            <span className="hidden lg:inline">Search Grounding</span>
+          </button>
+        )}
+
         {/* Guided SIH Demo Launch Button with Gradient */}
         <button
           onClick={onOpenGuidedDemo}
@@ -177,14 +231,104 @@ export const Header: React.FC<HeaderProps> = ({
           <span className="tracking-wide">GUIDED TOUR</span>
         </button>
 
-        {/* Notification Bell */}
-        <button
-          title="System Notifications"
-          className="p-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-600 hover:text-blue-600 transition-colors relative hidden sm:flex items-center justify-center shadow-xs"
-        >
-          <Bell className="w-4 h-4" />
-          <span className="w-2 h-2 rounded-full bg-blue-600 absolute top-1.5 right-1.5 ring-2 ring-white" />
-        </button>
+        {/* Notification Bell with Dynamic Risk Badge & Dropdown */}
+        <div className="relative">
+          <button
+            onClick={() => setNotifDropdownOpen(!notifDropdownOpen)}
+            title="Active Patient Risk Alerts"
+            className="p-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-600 hover:text-blue-600 transition-colors relative hidden sm:flex items-center justify-center shadow-xs"
+          >
+            <Bell className="w-4 h-4" />
+            {activeAlerts.length > 0 && (
+              <span
+                className={`absolute -top-1 -right-1 px-1.5 py-0.2 rounded-full text-[9px] font-mono font-bold text-white shadow-xs ${
+                  criticalCount > 0
+                    ? 'bg-rose-600 animate-pulse'
+                    : highCount > 0
+                    ? 'bg-amber-500'
+                    : 'bg-blue-600'
+                }`}
+              >
+                {activeAlerts.length}
+              </span>
+            )}
+          </button>
+
+          {notifDropdownOpen && (
+            <div className="absolute right-0 mt-2 w-96 bg-white/95 backdrop-blur-xl border border-slate-200 rounded-2xl shadow-xl shadow-slate-400/20 z-50 overflow-hidden divide-y divide-slate-100 animate-in fade-in zoom-in-95 duration-150">
+              <div className="p-3.5 bg-[#F8FAFF] flex items-center justify-between border-b border-slate-200/80">
+                <div className="flex items-center space-x-2">
+                  <ShieldAlert className="w-4 h-4 text-rose-600" />
+                  <span className="text-xs font-bold text-[#0F172A] uppercase tracking-wider font-mono">
+                    Predictive Risk Alerts ({activePatient.patientId})
+                  </span>
+                </div>
+                <button
+                  onClick={() => setNotifDropdownOpen(false)}
+                  className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              <div className="max-h-80 overflow-y-auto divide-y divide-slate-100 custom-scrollbar">
+                {activeAlerts.length === 0 ? (
+                  <div className="p-5 text-center space-y-1">
+                    <CheckCircle2 className="w-6 h-6 text-emerald-500 mx-auto" />
+                    <p className="text-xs font-semibold text-slate-800">No active clinical alerts</p>
+                    <p className="text-[11px] text-slate-500">Patient regimen parameters are within normal thresholds.</p>
+                  </div>
+                ) : (
+                  activeAlerts.map((alert) => (
+                    <div
+                      key={alert.id}
+                      onClick={() => {
+                        setNotifDropdownOpen(false);
+                        if (onNavigateTab) onNavigateTab('overview');
+                      }}
+                      className="p-3 hover:bg-slate-50 transition-colors cursor-pointer space-y-1 text-left"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span
+                          className={`text-[9px] font-mono font-bold px-1.5 py-0.2 rounded-full uppercase ${
+                            alert.severity === 'critical'
+                              ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                              : alert.severity === 'high'
+                              ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                              : 'bg-blue-50 text-blue-700 border border-blue-200'
+                          }`}
+                        >
+                          {alert.severity} • {alert.type.replace('_', ' ')}
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-mono">{alert.timestamp}</span>
+                      </div>
+                      <p className="text-xs font-bold text-[#0F172A]">{alert.title}</p>
+                      <p className="text-[11px] text-slate-600 line-clamp-2 leading-relaxed">
+                        {alert.message}
+                      </p>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <div className="p-2.5 bg-slate-50 flex items-center justify-between text-xs">
+                <span className="text-[11px] text-slate-500 font-mono">
+                  {cohortAlerts.length} total across cohort
+                </span>
+                <button
+                  onClick={() => {
+                    setNotifDropdownOpen(false);
+                    if (onNavigateTab) onNavigateTab('overview');
+                  }}
+                  className="font-bold text-blue-600 hover:text-blue-700 flex items-center space-x-1"
+                >
+                  <span>View in Dashboard Overview</span>
+                  <ArrowRight className="w-3 h-3" />
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Export Twin Record */}
         <button
@@ -197,5 +341,6 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
     </header>
   );
-};
+});
+
 

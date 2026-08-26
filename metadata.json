@@ -1,6 +1,6 @@
 {
   "name": "Q-DrugTwin",
-  "description": "AI-Powered Hybrid Digital Twin for Personalized Drug Response Simulation and Treatment Optimization",
-  "requestFramePermissions": [],
+  "description": "AI-Powered Hybrid Digital Twin for Personalized Drug Response Simulation and Treatment Optimization with Live Voice Conversations, Google Search Grounding, and Audio Transcription",
+  "requestFramePermissions": ["microphone"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

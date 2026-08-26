@@ -17,6 +17,8 @@ import {
 } from 'lucide-react';
 import { PatientDigitalTwinState } from '../../types';
 import { RadarChart, RadarDataPoint } from '../common/RadarChart';
+import { PharmacogenomicInsightsCard } from '../digitaltwin/PharmacogenomicInsightsCard';
+import { HealthMetricTrendChart } from '../digitaltwin/HealthMetricTrendChart';
 
 interface DigitalTwinViewProps {
   patient: PatientDigitalTwinState;
@@ -393,6 +395,15 @@ export const DigitalTwinView: React.FC<DigitalTwinViewProps> = ({ patient, onNav
           </div>
         </div>
       </div>
+
+      {/* Health Metric Trend Line Chart (Vitals & Labs Trajectory over Time) */}
+      <HealthMetricTrendChart patient={patient} />
+
+      {/* Pharmacogenomic Insights & Genetic Correlation Card */}
+      <PharmacogenomicInsightsCard
+        patient={patient}
+        onNavigate={onNavigate}
+      />
     </div>
   );
 };

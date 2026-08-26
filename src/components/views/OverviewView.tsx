@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   Activity,
   Users,
@@ -16,6 +16,9 @@ import {
 } from 'lucide-react';
 import { PatientDigitalTwinState, Medication, DrugInteraction } from '../../types';
 import { MetricCard } from '../common/MetricCard';
+import { PatientRiskNotificationPanel } from '../notifications/PatientRiskNotificationPanel';
+import { GlobalRiskHeatmap } from '../common/GlobalRiskHeatmap';
+import { analyzePatientRiskAlerts, analyzeCohortRiskAlerts } from '../../utils/riskNotificationAnalyzer';
 
 interface OverviewViewProps {
   activePatient: PatientDigitalTwinState;
@@ -23,6 +26,7 @@ interface OverviewViewProps {
   interactions: DrugInteraction[];
   onNavigate: (tab: any) => void;
   onOpenGuidedDemo: () => void;
+  onSelectPatient?: (patient: PatientDigitalTwinState) => void;
 }
 
 export const OverviewView: React.FC<OverviewViewProps> = ({
@@ -30,11 +34,30 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
   patients,
   interactions,
   onNavigate,
-  onOpenGuidedDemo
+  onOpenGuidedDemo,
+  onSelectPatient
 }) => {
   const highRiskInteractions = interactions.filter(
     (i) => i.severity === 'high' || i.severity === 'contraindicated'
   );
+
+  const activePatientAlerts = useMemo(
+    () => analyzePatientRiskAlerts(activePatient, interactions),
+    [activePatient, interactions]
+  );
+
+  const allCohortAlerts = useMemo(
+    () => analyzeCohortRiskAlerts(patients, interactions),
+    [patients, interactions]
+  );
+
+  const handleSelectPatientById = (patientId: string) => {
+    const found = patients.find((p) => p.patientId === patientId);
+    if (found && onSelectPatient) {
+      onSelectPatient(found);
+    }
+  };
+
 
   return (
     <div className="space-y-5 pb-12">
@@ -174,6 +197,24 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
           onClick={() => onNavigate('quantum-optimizer')}
         />
       </div>
+
+      {/* Patient Medication Analysis & Predictive Risk Alerts Panel */}
+      <PatientRiskNotificationPanel
+        activePatient={activePatient}
+        notifications={activePatientAlerts}
+        allCohortNotifications={allCohortAlerts}
+        onSelectPatient={handleSelectPatientById}
+        onNavigateToTab={onNavigate}
+      />
+
+      {/* Global Risk Heatmap: Aggregated Cross-Patient DDI Risk Matrix */}
+      <GlobalRiskHeatmap
+        patients={patients}
+        interactions={interactions}
+        activePatient={activePatient}
+        onSelectPatient={onSelectPatient}
+        onNavigate={onNavigate}
+      />
 
       {/* Two Column Grid: Pipeline Architecture & System Intelligence Live Status */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">

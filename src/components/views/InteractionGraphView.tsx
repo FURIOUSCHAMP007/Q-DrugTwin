@@ -28,10 +28,12 @@ import {
   RotateCcw,
   Target,
   ExternalLink,
-  ChevronRight
+  ChevronRight,
+  BookOpen
 } from 'lucide-react';
 import { PatientDigitalTwinState, DrugInteraction } from '../../types';
 import { KNOWN_DRUG_INTERACTIONS } from '../../data/mockDatabase';
+import { DdiClinicalContextModal } from '../graph/DdiClinicalContextModal';
 import {
   BIOMEDICAL_GRAPH_NODES,
   BIOMEDICAL_GRAPH_EDGES,
@@ -68,6 +70,29 @@ export const InteractionGraphView: React.FC<InteractionGraphViewProps> = ({
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>('e5');
   const [selectedDdi, setSelectedDdi] = useState<DrugInteraction | null>(KNOWN_DRUG_INTERACTIONS[0]);
   const [activeScenario, setActiveScenario] = useState<PrebuiltPathScenario | null>(PREBUILT_PATH_SCENARIOS[1]);
+
+  // --- Google Search Grounding Clinical Context Modal State ---
+  const [isClinicalContextOpen, setIsClinicalContextOpen] = useState<boolean>(false);
+  const [clinicalContextPair, setClinicalContextPair] = useState<{
+    drugA: string;
+    drugB: string;
+    ddiData?: DrugInteraction | null;
+  }>({
+    drugA: 'Lisinopril',
+    drugB: 'Spironolactone',
+    ddiData: KNOWN_DRUG_INTERACTIONS[0]
+  });
+
+  const handleOpenClinicalContext = (drugA: string, drugB: string, ddi?: DrugInteraction | null) => {
+    setClinicalContextPair({
+      drugA,
+      drugB,
+      ddiData: ddi || KNOWN_DRUG_INTERACTIONS.find(
+        (k) => (k.drugA === drugA && k.drugB === drugB) || (k.drugA === drugB && k.drugB === drugA)
+      ) || null
+    });
+    setIsClinicalContextOpen(true);
+  };
 
   // --- Filter & Search States ---
   const [categoryFilter, setCategoryFilter] = useState<GraphNodeCategory | 'all'>('all');
@@ -374,48 +399,46 @@ export const InteractionGraphView: React.FC<InteractionGraphViewProps> = ({
   };
 
   return (
-    <div className="space-y-6 pb-12" onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}>
-      {/* Top Banner Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-5 lg:p-6 rounded-2xl bg-white border border-slate-200/90 shadow-xs">
-        <div className="space-y-1">
-          <div className="flex items-center space-x-2 flex-wrap gap-y-1">
-            <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 font-mono text-xs font-bold border border-blue-200 flex items-center space-x-1">
+    <div className="space-y-5 pb-12" onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}>
+      {/* Top Banner Header - Clean & Focused */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-5 rounded-2xl bg-white border border-slate-200/90 shadow-xs">
+        <div>
+          <div className="flex items-center space-x-2">
+            <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 font-mono text-[11px] font-bold border border-blue-200 flex items-center space-x-1">
               <Network className="w-3.5 h-3.5" />
-              <span>PHARMAGNN MULTI-MODAL HETEROGENEOUS GRAPH</span>
+              <span>PHARMAGNN KNOWLEDGE GRAPH</span>
             </span>
-            <span className="px-2.5 py-0.5 rounded-full bg-purple-50 text-purple-700 font-mono text-xs font-semibold border border-purple-200">
-              {visibleNodes.length} Nodes & {visibleEdges.length} Interconnected Edges
-            </span>
-            <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-mono text-xs font-semibold border border-emerald-200 flex items-center space-x-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span>100% Fully Connected Mesh</span>
+            <span className="text-xs text-slate-500 font-mono">
+              {visibleNodes.length} nodes · {visibleEdges.length} links
             </span>
           </div>
 
-          <h2 className="text-xl lg:text-2xl font-extrabold text-[#0F172A] tracking-tight">
-            Multi-Hop Drug–Drug Interaction & <span className="bg-gradient-to-r from-[#2563EB] to-[#7C3AED] bg-clip-text text-transparent">Metabolic Link Discovery</span>
+          <h2 className="text-xl font-bold text-[#0F172A] mt-1">
+            Drug Interaction & <span className="bg-gradient-to-r from-[#2563EB] to-[#7C3AED] bg-clip-text text-transparent">Metabolic Link Explorer</span>
           </h2>
-          <p className="text-xs text-slate-600 max-w-3xl font-normal">
-            Interactive graph mapping pharmacological mechanisms across active medications, CYP450 isoenzymes, renal transporters, cellular targets, and clinical adverse reaction pathways.
+          <p className="text-xs text-slate-600 font-normal">
+            Visualize multi-hop connections between medications, CYP450 enzymes, transporters, and adverse risk pathways.
           </p>
         </div>
 
-        {/* Global Controls & Simulation Switches */}
-        <div className="flex items-center space-x-2.5 shrink-0 flex-wrap gap-y-2">
-          {/* Animated Particle Toggle */}
+        {/* Essential Quick Controls */}
+        <div className="flex items-center space-x-2 shrink-0">
           <button
-            onClick={() => setEnableMetabolicPulses(!enableMetabolicPulses)}
-            className={`px-3 py-1.5 rounded-xl text-xs font-mono font-semibold flex items-center space-x-1.5 transition-all border ${
-              enableMetabolicPulses
-                ? 'bg-blue-50 text-blue-700 border-blue-300 shadow-xs'
-                : 'bg-slate-100 text-slate-600 border-slate-200 hover:text-slate-900'
-            }`}
+            onClick={() => {
+              if (selectedDdi) {
+                handleOpenClinicalContext(selectedDdi.drugA, selectedDdi.drugB, selectedDdi);
+              } else {
+                handleOpenClinicalContext('Lisinopril', 'Spironolactone');
+              }
+            }}
+            className="px-3 py-1.5 rounded-xl text-xs font-mono font-semibold flex items-center space-x-1.5 transition-all border bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-800 border-blue-200 hover:border-blue-300 shadow-xs"
+            title="Retrieve Google Search Grounded Peer-Reviewed Literature for Active DDI"
           >
-            <Zap className={`w-3.5 h-3.5 ${enableMetabolicPulses ? 'text-blue-600 animate-pulse' : ''}`} />
-            <span>Flux Pulse: {enableMetabolicPulses ? 'ON' : 'OFF'}</span>
+            <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+            <BookOpen className="w-3.5 h-3.5 text-indigo-600" />
+            <span>Clinical Context</span>
           </button>
 
-          {/* Highlight Patient Regimen Toggle */}
           <button
             onClick={() => setHighlightPatientOnly(!highlightPatientOnly)}
             className={`px-3 py-1.5 rounded-xl text-xs font-mono font-semibold flex items-center space-x-1.5 transition-all border ${
@@ -425,31 +448,25 @@ export const InteractionGraphView: React.FC<InteractionGraphViewProps> = ({
             }`}
           >
             <Eye className="w-3.5 h-3.5" />
-            <span>Patient In-Vivo Regimen</span>
+            <span>Active Regimen Only</span>
           </button>
 
-          {/* Reset Layout */}
           <button
             onClick={handleResetPositions}
-            className="p-2 rounded-xl bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200 border border-slate-200 transition-all"
-            title="Reset Graph Layout & Zoom"
+            className="p-1.5 rounded-xl bg-slate-100 text-slate-600 hover:text-slate-900 border border-slate-200 transition-all"
+            title="Reset Graph Layout"
           >
             <RotateCcw className="w-4 h-4" />
           </button>
         </div>
       </div>
 
-      {/* Prebuilt Critical Path Scenarios Bar */}
-      <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-xs space-y-3">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div className="flex items-center space-x-2">
-            <Sparkles className="w-4 h-4 text-purple-600" />
-            <span className="text-xs font-bold text-[#0F172A] uppercase tracking-wider font-mono">
-              Trace Multi-Hop Causal Scenarios:
-            </span>
-          </div>
-          <span className="text-[11px] text-slate-500">
-            Click to illuminate the complete causal chain from drug administration to cellular toxicity
+      {/* Prebuilt Scenarios Bar */}
+      <div className="p-3.5 rounded-2xl bg-white border border-slate-200/90 shadow-xs space-y-2">
+        <div className="flex items-center space-x-2">
+          <Sparkles className="w-3.5 h-3.5 text-purple-600" />
+          <span className="text-xs font-bold text-[#0F172A] font-mono">
+            Highlighted Pathway Scenarios:
           </span>
         </div>
 
@@ -464,10 +481,10 @@ export const InteractionGraphView: React.FC<InteractionGraphViewProps> = ({
                   setCustomPathActive(false);
                   setSelectedNodeId(scenario.sourceId);
                 }}
-                className={`px-3.5 py-2 rounded-xl text-xs font-mono font-semibold whitespace-nowrap transition-all border flex items-center space-x-2 shrink-0 ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-mono font-medium whitespace-nowrap transition-all border flex items-center space-x-2 shrink-0 ${
                   isCurrent
-                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-xs border-transparent'
-                    : 'bg-[#F8FAFF] text-slate-700 hover:bg-slate-100 hover:border-slate-300 border-slate-200'
+                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-xs border-transparent font-bold'
+                    : 'bg-[#F8FAFF] text-slate-700 hover:bg-slate-100 border-slate-200'
                 }`}
               >
                 <span
@@ -480,17 +497,9 @@ export const InteractionGraphView: React.FC<InteractionGraphViewProps> = ({
                   }`}
                 />
                 <span>{scenario.name}</span>
-                <span
-                  className={`text-[9px] px-1.5 py-0.5 rounded-md uppercase font-bold ${
-                    isCurrent
-                      ? 'bg-white/20 text-white'
-                      : scenario.severity === 'contraindicated'
-                      ? 'bg-rose-100 text-rose-700'
-                      : scenario.severity === 'high'
-                      ? 'bg-amber-100 text-amber-700'
-                      : 'bg-emerald-100 text-emerald-700'
-                  }`}
-                >
+                <span className={`text-[9px] px-1 py-0.5 rounded-md uppercase font-bold ${
+                  isCurrent ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
+                }`}>
                   {scenario.riskBadge}
                 </span>
               </button>
@@ -1111,6 +1120,27 @@ export const InteractionGraphView: React.FC<InteractionGraphViewProps> = ({
                 </p>
               </div>
 
+              {/* Medication Node Clinical Literature Quick Action */}
+              {activeNodeDetails.category === 'medication' && (
+                <button
+                  onClick={() => {
+                    const interactingDdi = KNOWN_DRUG_INTERACTIONS.find(
+                      (k) => k.drugA === activeNodeDetails.id || k.drugB === activeNodeDetails.id
+                    );
+                    if (interactingDdi) {
+                      handleOpenClinicalContext(interactingDdi.drugA, interactingDdi.drugB, interactingDdi);
+                    } else {
+                      handleOpenClinicalContext(activeNodeDetails.id, 'Lisinopril');
+                    }
+                  }}
+                  className="w-full py-2 px-3 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-800 font-mono text-xs font-bold transition-all flex items-center justify-center space-x-1.5 shadow-xs"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+                  <span>Clinical Literature & DDI Context</span>
+                  <BookOpen className="w-3.5 h-3.5 text-indigo-600 ml-1" />
+                </button>
+              )}
+
               {/* Inflow & Outflow Links List */}
               <div className="space-y-2 pt-1 border-t border-slate-100">
                 <span className="text-[10px] text-slate-500 uppercase font-bold block">
@@ -1206,13 +1236,26 @@ export const InteractionGraphView: React.FC<InteractionGraphViewProps> = ({
                       <span className="font-bold text-[#0F172A]">
                         {ddi.drugA} ↔ {ddi.drugB}
                       </span>
-                      <span
-                        className={`text-[9px] px-2 py-0.5 rounded-full font-bold uppercase ${getSeverityBadge(
-                          ddi.severity as EdgeSeverity
-                        )}`}
-                      >
-                        {ddi.severity}
-                      </span>
+                      <div className="flex items-center space-x-1.5">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenClinicalContext(ddi.drugA, ddi.drugB, ddi);
+                          }}
+                          className="px-2 py-0.5 rounded-lg bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 text-[10px] font-mono font-bold flex items-center space-x-1 transition-colors"
+                          title="Retrieve Peer-Reviewed Literature with Google Search Grounding"
+                        >
+                          <Sparkles className="w-2.5 h-2.5 text-blue-600" />
+                          <span>Context</span>
+                        </button>
+                        <span
+                          className={`text-[9px] px-2 py-0.5 rounded-full font-bold uppercase ${getSeverityBadge(
+                            ddi.severity as EdgeSeverity
+                          )}`}
+                        >
+                          {ddi.severity}
+                        </span>
+                      </div>
                     </div>
                     <p className="text-[11px] text-slate-600 font-sans mt-1 line-clamp-2">
                       {ddi.mechanism}
@@ -1225,7 +1268,7 @@ export const InteractionGraphView: React.FC<InteractionGraphViewProps> = ({
 
           {/* Selected DDI Clinical Management Action Box */}
           {selectedDdi && (
-            <div className="rounded-2xl bg-white border border-purple-200/80 p-5 shadow-xs space-y-3 font-mono text-xs">
+            <div className="rounded-2xl bg-white border border-purple-200/80 p-5 shadow-xs space-y-3.5 font-mono text-xs">
               <div className="flex items-center justify-between pb-2 border-b border-slate-100">
                 <span className="text-purple-700 font-bold">INTERACTION DOSSIER</span>
                 <span className="text-[10px] text-purple-700 bg-purple-50 border border-purple-200 px-2 py-0.5 rounded-full font-semibold">
@@ -1252,9 +1295,21 @@ export const InteractionGraphView: React.FC<InteractionGraphViewProps> = ({
                 </p>
               </div>
 
+              {/* Primary Google Search Grounding Clinical Context Button */}
+              <button
+                id="ddi-clinical-context-button"
+                onClick={() => handleOpenClinicalContext(selectedDdi.drugA, selectedDdi.drugB, selectedDdi)}
+                className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-mono text-xs font-bold transition-all shadow-sm hover:shadow-md flex items-center justify-center space-x-2 group"
+                title="Retrieve latest peer-reviewed literature via Google Search Grounding"
+              >
+                <Sparkles className="w-4 h-4 text-cyan-300 animate-pulse shrink-0" />
+                <span>Clinical Context (Literature Grounding)</span>
+                <BookOpen className="w-4 h-4 text-white/90 group-hover:translate-x-0.5 transition-transform shrink-0" />
+              </button>
+
               {/* Navigation Action Buttons */}
               {onNavigate && (
-                <div className="pt-2 flex items-center space-x-2">
+                <div className="pt-1 flex items-center space-x-2">
                   <button
                     onClick={() => onNavigate('simulation-lab')}
                     className="flex-1 py-2 rounded-xl bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 font-mono text-xs font-bold transition-all text-center flex items-center justify-center space-x-1"
@@ -1275,6 +1330,18 @@ export const InteractionGraphView: React.FC<InteractionGraphViewProps> = ({
           )}
         </div>
       </div>
+
+      {/* Google Search Grounding Clinical Context Modal */}
+      <DdiClinicalContextModal
+        isOpen={isClinicalContextOpen}
+        onClose={() => setIsClinicalContextOpen(false)}
+        drugA={clinicalContextPair.drugA}
+        drugB={clinicalContextPair.drugB}
+        ddiData={clinicalContextPair.ddiData}
+        patient={patient}
+        onNavigateToSimulation={() => onNavigate && onNavigate('simulation-lab')}
+        onNavigateToOptimizer={() => onNavigate && onNavigate('quantum-optimizer')}
+      />
     </div>
   );
 };

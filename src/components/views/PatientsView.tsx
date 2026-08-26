@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Users,
   Search,
@@ -10,9 +10,11 @@ import {
   AlertTriangle,
   Sparkles,
   ShieldAlert,
-  Dna
+  Dna,
+  FileText
 } from 'lucide-react';
 import { PatientDigitalTwinState } from '../../types';
+import { ClinicalNotesSection } from '../common/ClinicalNotesSection';
 
 interface PatientsViewProps {
   patients: PatientDigitalTwinState[];
@@ -31,6 +33,18 @@ export const PatientsView: React.FC<PatientsViewProps> = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [riskFilter, setRiskFilter] = useState<string>('all');
+  const [selectedPatientForNotes, setSelectedPatientForNotes] = useState<string>(
+    activePatient.patientId
+  );
+  const notesSectionRef = useRef<HTMLDivElement>(null);
+
+  const handleOpenPatientNotes = (patient: PatientDigitalTwinState) => {
+    setSelectedPatientForNotes(patient.patientId);
+    onSelectPatient(patient);
+    if (notesSectionRef.current) {
+      notesSectionRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   const filteredPatients = patients.filter((p) => {
     const matchesSearch =
@@ -189,13 +203,22 @@ export const PatientsView: React.FC<PatientsViewProps> = ({
                   </div>
                 </div>
 
-                {/* Genomics Preview */}
-                {p.genomics.length > 0 && (
-                  <div className="mt-3 flex items-center space-x-2 text-[11px] text-slate-600">
-                    <Dna className="w-3.5 h-3.5 text-purple-600 shrink-0" />
-                    <span className="truncate">
-                      {p.genomics.map((g) => `${g.gene} ${g.phenotype}`).join(', ')}
-                    </span>
+                {/* Genomics & Metabolism Markers Preview */}
+                {(p.genomicProfile?.markers?.length || p.genomics.length > 0) && (
+                  <div className="mt-3 p-2 rounded-xl bg-purple-50/60 border border-purple-100 flex items-center justify-between gap-2 text-[11px]">
+                    <div className="flex items-center space-x-1.5 min-w-0">
+                      <Dna className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                      <span className="truncate text-slate-700 font-mono">
+                        {p.genomicProfile?.markers
+                          ? p.genomicProfile.markers.map(m => `${m.gene} (${m.metabolizerCategory})`).join(', ')
+                          : p.genomics.map((g) => `${g.gene} ${g.phenotype}`).join(', ')}
+                      </span>
+                    </div>
+                    {p.genomicProfile?.markers && (
+                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-purple-100 text-purple-800 font-mono font-bold shrink-0">
+                        {p.genomicProfile.markers.length} Markers
+                      </span>
+                    )}
                   </div>
                 )}
               </div>
@@ -204,14 +227,23 @@ export const PatientsView: React.FC<PatientsViewProps> = ({
               <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
                 <button
                   onClick={() => onSelectPatient(p)}
-                  className={`w-full py-2 rounded-xl text-xs font-semibold transition-all flex items-center justify-center space-x-1.5 ${
+                  className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-all flex items-center justify-center space-x-1.5 ${
                     isSelected
                       ? 'bg-blue-100 text-blue-800 border border-blue-300 cursor-default font-bold'
                       : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200'
                   }`}
                 >
                   <Activity className="w-3.5 h-3.5" />
-                  <span>{isSelected ? 'Currently Selected' : 'Load Digital Twin'}</span>
+                  <span>{isSelected ? 'Active Twin' : 'Load Twin'}</span>
+                </button>
+
+                <button
+                  onClick={() => handleOpenPatientNotes(p)}
+                  title="View & Edit Clinical Notes for this Patient"
+                  className="px-2.5 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 transition-colors shrink-0 flex items-center space-x-1 text-xs font-bold font-mono"
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  <span>Notes</span>
                 </button>
 
                 <button
@@ -228,6 +260,16 @@ export const PatientsView: React.FC<PatientsViewProps> = ({
             </div>
           );
         })}
+      </div>
+
+      {/* Clinical Notes Section */}
+      <div ref={notesSectionRef} className="pt-2">
+        <ClinicalNotesSection
+          patients={patients}
+          activePatient={activePatient}
+          onSelectPatient={onSelectPatient}
+          selectedPatientId={selectedPatientForNotes}
+        />
       </div>
     </div>
   );

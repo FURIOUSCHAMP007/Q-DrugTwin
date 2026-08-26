@@ -106,7 +106,7 @@ export const BIOMEDICAL_GRAPH_NODES: BiomedicalNode[] = [
     x: 140,
     y: 350,
     description: 'Thienopyridine prodrug requiring two-step hepatic oxidation by CYP2C19 into its active antiplatelet thiol metabolite.',
-    clinicalSignificance: 'Prevents coronary stent thrombosis; bioactivation is blocked by CYP2C19 inhibitors and *2 loss-of-function alleles.',
+    clinicalSignificance: 'Prevents coronary stent thrombosis; bioactivation is blocked by CYP2C19 inhibitors and 2 loss-of-function alleles.',
     patientMatch: false,
     halfLife: '6.0 hrs',
     route: 'Oral'
@@ -222,7 +222,7 @@ export const BIOMEDICAL_GRAPH_NODES: BiomedicalNode[] = [
     x: 230,
     y: 350,
     description: 'Hepatic monooxygenase enzyme essential for clopidogrel prodrug bioactivation and proton pump inhibitor clearance.',
-    clinicalSignificance: 'Pharmacogenomic bottleneck: loss-of-function variants (*2, *3) or Omeprazole inhibition causes antiplatelet resistance.'
+    clinicalSignificance: 'Pharmacogenomic bottleneck: loss-of-function variants (2, 3) or Omeprazole inhibition causes antiplatelet resistance.'
   },
   {
     id: 'CYP2C9',
@@ -232,7 +232,7 @@ export const BIOMEDICAL_GRAPH_NODES: BiomedicalNode[] = [
     x: 470,
     y: 390,
     description: 'Metabolizes narrow therapeutic index drugs including Warfarin, Sulfonylureas (Glipizide), and ARBs (Losartan).',
-    clinicalSignificance: '*3 allele carriers experience delayed drug clearance and elevated risk of drug-induced hypoglycemia/bleeding.'
+    clinicalSignificance: '3 allele carriers experience delayed drug clearance and elevated risk of drug-induced hypoglycemia/bleeding.'
   },
   {
     id: 'Neprilysin',
@@ -262,7 +262,7 @@ export const BIOMEDICAL_GRAPH_NODES: BiomedicalNode[] = [
     x: 740,
     y: 100,
     description: 'Sinusoidal hepatic uptake transporter mediating active hepatic extraction of statins from portal blood.',
-    clinicalSignificance: 'Loss-of-function variants (521T>C, *5) impair hepatic statin clearance, increasing systemic exposure and myopathy risk.'
+    clinicalSignificance: 'Loss-of-function variants (521T>C, 5) impair hepatic statin clearance, increasing systemic exposure and myopathy risk.'
   },
   {
     id: 'UGT2B7',
@@ -378,7 +378,7 @@ export const BIOMEDICAL_GRAPH_NODES: BiomedicalNode[] = [
     x: 770,
     y: 150,
     description: 'Excessive systemic statin exposure causing skeletal muscle mitochondrial dysfunction and creatine kinase release.',
-    clinicalSignificance: 'Result of CYP3A4 competitive inhibition by Amlodipine combined with SLCO1B1 *5 transporter impairment.'
+    clinicalSignificance: 'Result of CYP3A4 competitive inhibition by Amlodipine combined with SLCO1B1 5 transporter impairment.'
   },
   {
     id: 'Thrombosis_ADR',
@@ -388,7 +388,7 @@ export const BIOMEDICAL_GRAPH_NODES: BiomedicalNode[] = [
     x: 240,
     y: 530,
     description: 'Failure to achieve adequate platelet inhibition due to blocked clopidogrel prodrug bioactivation.',
-    clinicalSignificance: 'Direct clinical consequence of Omeprazole + Clopidogrel DDI and/or CYP2C19 *2/*2 poor metabolizer phenotype.'
+    clinicalSignificance: 'Direct clinical consequence of Omeprazole + Clopidogrel DDI and/or CYP2C19 2/2 poor metabolizer phenotype.'
   },
   {
     id: 'Angioedema_ADR',
@@ -414,7 +414,7 @@ export const BIOMEDICAL_GRAPH_NODES: BiomedicalNode[] = [
   // --- PHARMACOGENOMIC (PGX) BIOMARKERS ---
   {
     id: 'PGX_CYP2C19',
-    label: 'CYP2C19 *2/*2',
+    label: 'CYP2C19 2/2',
     subLabel: 'Poor Metabolizer Diplotype',
     category: 'pgx',
     x: 320,
@@ -424,7 +424,7 @@ export const BIOMEDICAL_GRAPH_NODES: BiomedicalNode[] = [
   },
   {
     id: 'PGX_SLCO1B1',
-    label: 'SLCO1B1 *5',
+    label: 'SLCO1B1 5',
     subLabel: 'Reduced Uptake (521T>C)',
     category: 'pgx',
     x: 820,
@@ -628,7 +628,7 @@ export const BIOMEDICAL_GRAPH_EDGES: BiomedicalEdge[] = [
     from: 'PGX_CYP2C19',
     to: 'CYP2C19',
     type: 'genomic_attenuation',
-    label: 'Loss-of-Function *2/*2 Null Allele',
+    label: 'Loss-of-Function 2/2 Null Allele',
     mechanism: 'Alternative splicing eliminates functional enzyme, creating baseline clopidogrel resistance.',
     severity: 'genomic',
     color: '#7C3AED',
@@ -861,7 +861,7 @@ export const PREBUILT_PATH_SCENARIOS: PrebuiltPathScenario[] = [
     targetId: 'Statin_Myopathy_ADR',
     riskBadge: 'MODERATE TOXICITY',
     severity: 'moderate',
-    description: 'Amlodipine CYP3A4 competition combined with SLCO1B1 *5 reduced hepatic uptake produces elevated systemic statin AUC.',
+    description: 'Amlodipine CYP3A4 competition combined with SLCO1B1 5 reduced hepatic uptake produces elevated systemic statin AUC.',
     clinicalSolution: 'Cap Atorvastatin at 20mg QD or substitute with Rosuvastatin / Pravastatin (non-CYP3A4 metabolized).'
   },
   {

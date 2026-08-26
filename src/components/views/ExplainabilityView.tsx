@@ -8,9 +8,12 @@ import {
   Info,
   HelpCircle,
   BarChart2,
-  CheckCircle2
+  CheckCircle2,
+  ShieldCheck,
+  Brain
 } from 'lucide-react';
 import { PatientDigitalTwinState } from '../../types';
+import { ConfidenceScoreIndicator } from '../common/ConfidenceScoreIndicator';
 
 interface ExplainabilityViewProps {
   patient: PatientDigitalTwinState;
@@ -21,12 +24,12 @@ export const ExplainabilityView: React.FC<ExplainabilityViewProps> = ({ patient 
 
   // Synthetic SHAP feature attributions for patient's drug response prediction
   const shapFeatures = [
-    { name: 'Baseline eGFR (58 mL/min)', value: '+0.28', impact: 'positive', description: 'Supports SGLT2i renoprotective efficacy signal' },
-    { name: 'Elevated HbA1c (8.4%)', value: '+0.24', impact: 'positive', description: 'Large potential therapeutic window for glycemic drop' },
+    { name: `Baseline eGFR (${patient.organFunction.eGFR} mL/min)`, value: '+0.28', impact: 'positive', description: 'Supports SGLT2i renoprotective efficacy signal' },
+    { name: `Elevated HbA1c (${patient.organFunction.hba1c}%)`, value: '+0.24', impact: 'positive', description: 'Large potential therapeutic window for glycemic drop' },
     { name: 'CYP2C19 *2/*2 (Poor Metabolizer)', value: '-0.19', impact: 'negative', description: 'Impaired prodrug bioactivation for Clopidogrel' },
     { name: 'Concurrent ACEi (Lisinopril)', value: '-0.14', impact: 'negative', description: 'Increases hyperkalemia risk when adding MRA' },
-    { name: 'Age 62 & BMI 31.4', value: '+0.09', impact: 'positive', description: 'Cardiometabolic benefit profile matches GLP1/SGLT2 trials' },
-    { name: 'Preserved LVEF (58%)', value: '+0.06', impact: 'positive', description: 'Stable myocardium with favorable hemodynamic reserve' }
+    { name: `Age ${patient.demographics.age} & Multimorbidity`, value: '+0.09', impact: 'positive', description: 'Cardiometabolic benefit profile matches landmark GLP1/SGLT2 trials' },
+    { name: 'Preserved Organ Stability', value: '+0.06', impact: 'positive', description: 'Stable myocardium with favorable hemodynamic reserve' }
   ];
 
   return (
@@ -44,7 +47,7 @@ export const ExplainabilityView: React.FC<ExplainabilityViewProps> = ({ patient 
             Biomarker Importance & <span className="bg-gradient-to-r from-[#2563EB] to-[#7C3AED] bg-clip-text text-transparent">Model Interpretability</span>
           </h2>
           <p className="text-xs text-slate-600 mt-1 max-w-2xl font-normal">
-            Transparent Shapley additive explanations (SHAP) and counterfactual sensitivity for {patient.name.split(' (')[0]}
+            Transparent Shapley additive explanations (SHAP), uncertainty quantification, and counterfactual sensitivity for {patient.name.split(' (')[0]}
           </p>
         </div>
       </div>
@@ -106,8 +109,61 @@ export const ExplainabilityView: React.FC<ExplainabilityViewProps> = ({ patient 
           </div>
         </div>
 
-        {/* Right 5 Cols: Counterfactual Sensitivity */}
+        {/* Right 5 Cols: Counterfactual Sensitivity & Confidence Breakdown */}
         <div className="lg:col-span-5 space-y-4">
+          {/* Calibrated Confidence Score Indicator Card */}
+          <div className="rounded-2xl bg-white border border-slate-200/90 p-5 lg:p-6 shadow-xs space-y-3">
+            <h3 className="text-sm font-bold text-[#0F172A] flex items-center space-x-2">
+              <Brain className="w-4 h-4 text-blue-600" />
+              <span>Model Prediction Confidence Calibration</span>
+            </h3>
+            <p className="text-xs text-slate-500">
+              Evaluates model epistemic and aleatoric certainty against patient's digital twin parameters:
+            </p>
+            <ConfidenceScoreIndicator
+              confidence={{
+                overallScore: 93,
+                tier: 'High Certainty',
+                uncertaintyMargin: 2.5,
+                clinicalRecommendationStrength: 'Strong (Grade A)',
+                dimensions: [
+                  {
+                    name: 'SHAP Feature Convergence',
+                    score: 95,
+                    weight: 35,
+                    description: 'Consistent top feature directions across tree and kernel estimators',
+                    evidenceSource: 'KernelSHAP Engine'
+                  },
+                  {
+                    name: 'Empirical Coverage (Conformal)',
+                    score: 94,
+                    weight: 30,
+                    description: '95% empirical prediction interval coverage on multicenter test split',
+                    evidenceSource: 'Conformal Prediction'
+                  },
+                  {
+                    name: 'Pharmacological Plausibility',
+                    score: 91,
+                    weight: 20,
+                    description: 'Biological concordance with known kidney/heart receptors',
+                    evidenceSource: 'Biomedical Graph'
+                  },
+                  {
+                    name: 'Sample Neighborhood Density',
+                    score: 92,
+                    weight: 15,
+                    description: 'High local patient density in latent embedding manifold',
+                    evidenceSource: 't-SNE Latent Space'
+                  }
+                ],
+                modelCalibrationNotice: 'Calibrated with Brier score 0.084 on multicenter CKD & T2D cohorts.',
+                sampleSizeGrounding: 'Validated on 12,400+ clinical patient trajectories.'
+              }}
+              size="lg"
+              showBreakdown={true}
+            />
+          </div>
+
           <div className="rounded-2xl bg-white border border-slate-200/90 p-5 lg:p-6 shadow-xs space-y-3.5">
             <h3 className="text-sm font-bold text-[#0F172A] flex items-center space-x-2">
               <Sparkles className="w-4 h-4 text-purple-600" />
@@ -120,7 +176,7 @@ export const ExplainabilityView: React.FC<ExplainabilityViewProps> = ({ patient 
             <div className="space-y-3 text-xs font-mono">
               <div className="p-3.5 rounded-xl bg-[#F8FAFF] border border-slate-200">
                 <span className="text-blue-700 font-bold block mb-1">
-                  What if eGFR deteriorated from 58 to 35 mL/min?
+                  What if eGFR deteriorated from {patient.organFunction.eGFR} to 35 mL/min?
                 </span>
                 <p className="text-slate-700 font-sans text-xs leading-relaxed">
                   Model shifts Empagliflozin suitability from <strong className="text-slate-900">92/100</strong> down to <strong className="text-slate-900">74/100</strong> due to reduced glycemic excretion, while retaining cardiorenal protection signal. Metformin receives a mandatory dose reduction warning.
@@ -137,25 +193,8 @@ export const ExplainabilityView: React.FC<ExplainabilityViewProps> = ({ patient 
               </div>
             </div>
           </div>
-
-          {/* Model Calibration Confidence */}
-          <div className="rounded-2xl bg-white border border-slate-200/90 p-5 lg:p-6 shadow-xs space-y-2.5 text-xs font-mono">
-            <div className="flex items-center justify-between text-slate-700">
-              <span>Brier Calibration Score:</span>
-              <span className="text-emerald-700 font-bold">0.084 (Well-Calibrated)</span>
-            </div>
-            <div className="flex items-center justify-between text-slate-700">
-              <span>Epistemic Uncertainty:</span>
-              <span className="text-blue-700 font-bold">±3.4%</span>
-            </div>
-            <div className="flex items-center justify-between text-slate-700">
-              <span>Aleatoric Uncertainty:</span>
-              <span className="text-slate-500 font-bold">±2.1%</span>
-            </div>
-          </div>
         </div>
       </div>
     </div>
   );
 };
-

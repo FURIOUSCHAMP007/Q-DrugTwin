@@ -41,7 +41,7 @@ interface SidebarProps {
   highRiskCount?: number;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({
+export const Sidebar = React.memo<SidebarProps>(({
   currentTab,
   onSelectTab,
   collapsed,
@@ -282,4 +282,5 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
     </aside>
   );
-};
+});
+

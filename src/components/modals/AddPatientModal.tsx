@@ -103,11 +103,70 @@ export const AddPatientModal: React.FC<AddPatientModalProps> = ({
       genomics: [
         {
           gene: 'CYP2C19',
-          diplotype: '*1/*2',
+          diplotype: '1/2',
           phenotype: 'Intermediate Metabolizer',
           clinicalSignificance: 'Standard to moderately reduced clopidogrel biotransformation'
         }
       ],
+      genomicProfile: {
+        sequencingTechnology: 'Targeted NGS Pharmacogenomics Panel (Illumina NovaSeq 6000)',
+        panelVersion: 'PGx-Clinical-Core v4.2',
+        sampleDate: new Date().toISOString().split('T')[0],
+        labAccreditation: 'CLIA / CAP Accredited',
+        dnaExtractionYield: '99.6% Call Rate',
+        markers: [
+          {
+            gene: 'CYP2C19',
+            diplotype: '*1/*2',
+            rsId: 'rs4244285',
+            phenotype: 'Intermediate Metabolizer',
+            metabolizerCategory: 'intermediate',
+            activityScore: 1.0,
+            affectedDrugClasses: ['Antiplatelets (Clopidogrel)', 'Proton Pump Inhibitors', 'SSRIs'],
+            impactedEnzymesOrTransporters: 'Phase I Cytochrome P450 2C19',
+            clinicalSummary: 'Single *2 loss-of-function allele reduces clopidogrel activation by ~30-50%.',
+            cpicGuidelineLevel: 'CPIC Level 1A',
+            fdaLabelingActionable: true,
+            metabolismImpact: 'Impaired Clearance (Toxicity Risk)'
+          },
+          {
+            gene: 'CYP2D6',
+            diplotype: '*1/*1',
+            rsId: 'rs3892097 (wt)',
+            phenotype: 'Normal (Extensive) Metabolizer',
+            metabolizerCategory: 'normal',
+            activityScore: 2.0,
+            affectedDrugClasses: ['Beta-Blockers', 'SSRIs', 'Opioids'],
+            impactedEnzymesOrTransporters: 'Phase I Cytochrome P450 2D6',
+            clinicalSummary: 'Normal baseline metabolic clearance of beta-blockers and opioids.',
+            cpicGuidelineLevel: 'CPIC Level 1A',
+            fdaLabelingActionable: false,
+            metabolismImpact: 'Normal Baseline Metabolism'
+          },
+          {
+            gene: 'SLCO1B1',
+            diplotype: '*1/*1',
+            rsId: 'rs4149056 (wt)',
+            phenotype: 'Normal Function Transporter',
+            metabolizerCategory: 'normal',
+            activityScore: 2.0,
+            affectedDrugClasses: ['Statins'],
+            impactedEnzymesOrTransporters: 'OATP1B1 Hepatic Transporter',
+            clinicalSummary: 'Standard statin hepatic uptake with normal myopathy risk profile.',
+            cpicGuidelineLevel: 'CPIC Level 1A',
+            fdaLabelingActionable: false,
+            metabolismImpact: 'Normal Baseline Metabolism'
+          }
+        ],
+        primaryMetabolizerSummary: {
+          poorMetabolizersCount: 0,
+          intermediateCount: 1,
+          ultraRapidCount: 0,
+          normalCount: 2
+        },
+        highRiskDrugsToAvoid: ['High-dose Clopidogrel monotherapy in acute coronary syndrome'],
+        doseAdjustmentRecommended: ['Consider alternative P2Y12 inhibitor (Ticagrelor/Prasugrel) if PCI indicated']
+      },
       labs: {
         eGFR: { value: eGFR, unit: 'mL/min', flag: eGFR < 60 ? 'low' : 'normal', referenceRange: '> 60' },
         hba1c: { value: hba1c, unit: '%', flag: hba1c > 7 ? 'high' : 'normal', referenceRange: '< 5.7' }

@@ -15,14 +15,19 @@ import {
   Plus,
   Trash2,
   TrendingUp,
-  ShieldCheck
+  ShieldCheck,
+  Gauge,
+  ShieldAlert
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { PatientDigitalTwinState, Medication, ScenarioSimulationResult } from '../../types';
 import { CANDIDATE_MEDICATIONS } from '../../data/mockDatabase';
 import { ApiService } from '../../services/apiService';
+import { checkDosageTolerance } from '../../utils/dosageToleranceChecker';
 import { RadarChart, RadarDataPoint } from '../common/RadarChart';
 import { ConfidenceGauge } from '../common/ConfidenceGauge';
+import { ConfidenceScoreIndicator } from '../common/ConfidenceScoreIndicator';
+import { QuantumExecutionHistory } from '../simulation/QuantumExecutionHistory';
 
 interface SimulationLabViewProps {
   patient: PatientDigitalTwinState;
@@ -86,6 +91,14 @@ export const SimulationLabView: React.FC<SimulationLabViewProps> = ({
         });
       }
     }, 1400);
+  };
+
+  const handleApplyCandidatesFromQuantum = (candidateIds: string[], customScenarioName?: string) => {
+    setSelectedCandidateIds(candidateIds);
+    if (customScenarioName) {
+      setScenarioName(customScenarioName);
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // Radar representation for the active simulated scenario
@@ -165,12 +178,17 @@ export const SimulationLabView: React.FC<SimulationLabViewProps> = ({
               <div className="space-y-2 max-h-72 overflow-y-auto pr-1 custom-scrollbar">
                 {CANDIDATE_MEDICATIONS.map((cand) => {
                   const isChecked = selectedCandidateIds.includes(cand.id);
+                  const toleranceCheck = checkDosageTolerance(cand, patient.dosageToleranceThresholds);
                   return (
                     <div
                       key={cand.id}
                       onClick={() => toggleCandidate(cand.id)}
                       className={`p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
-                        isChecked
+                        toleranceCheck.isExceeded
+                          ? isChecked
+                            ? 'bg-rose-50/90 border-rose-300 text-rose-900 shadow-xs'
+                            : 'bg-rose-50/30 border-rose-200 text-slate-700 hover:border-rose-300'
+                          : isChecked
                           ? 'bg-blue-50/80 border-blue-300 text-blue-900 shadow-xs'
                           : 'bg-[#F8FAFF] border-slate-200 text-slate-700 hover:border-slate-300'
                       }`}
@@ -179,18 +197,29 @@ export const SimulationLabView: React.FC<SimulationLabViewProps> = ({
                         <div
                           className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${
                             isChecked
-                              ? 'bg-blue-600 border-blue-600 text-white'
+                              ? toleranceCheck.isExceeded
+                                ? 'bg-rose-600 border-rose-600 text-white'
+                                : 'bg-blue-600 border-blue-600 text-white'
                               : 'border-slate-300 bg-white'
                           }`}
                         >
                           {isChecked && <Check className="w-3 h-3 stroke-[3]" />}
                         </div>
                         <div className="truncate">
-                          <span className="text-xs font-bold text-[#0F172A] block truncate">
-                            {cand.name} ({cand.dosage})
-                          </span>
+                          <div className="flex items-center space-x-1.5 truncate">
+                            <span className="text-xs font-bold text-[#0F172A] block truncate">
+                              {cand.name} ({cand.dosage})
+                            </span>
+                            {toleranceCheck.isExceeded && (
+                              <span className="px-1.5 py-0.2 rounded bg-rose-100 text-rose-700 border border-rose-200 text-[9px] font-mono font-bold shrink-0">
+                                Dose Limit
+                              </span>
+                            )}
+                          </div>
                           <span className="text-[10px] text-slate-500 font-mono truncate block">
-                            {cand.category}
+                            {toleranceCheck.isExceeded
+                              ? `Historical cap: ${toleranceCheck.threshold?.maxDailyDoseMg}mg/d (${toleranceCheck.threshold?.limitingFactor.replace('_', ' ')})`
+                              : cand.category}
                           </span>
                         </div>
                       </div>
@@ -321,6 +350,13 @@ export const SimulationLabView: React.FC<SimulationLabViewProps> = ({
                 </div>
               </div>
 
+              {/* Simulation Prediction Confidence Score Indicator */}
+              <ConfidenceScoreIndicator
+                confidence={activeResult.overallSuitabilityScore}
+                size="md"
+                showBreakdown={true}
+              />
+
               {/* Multi-Axis Radar & Organ Impact */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
                 <div>
@@ -377,6 +413,40 @@ export const SimulationLabView: React.FC<SimulationLabViewProps> = ({
                 </div>
               )}
 
+              {/* Historical Tolerance Threshold Violations in Simulated Candidates */}
+              {activeResult.candidateMedications.some((m) => checkDosageTolerance(m, patient.dosageToleranceThresholds).isExceeded) && (
+                <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 space-y-2">
+                  <div className="flex items-center space-x-2 text-rose-700 text-xs font-bold font-mono">
+                    <ShieldAlert className="w-4 h-4 shrink-0" />
+                    <span>Predictive Warning: Proposed Candidate Exceeds Historical Tolerance Ceiling</span>
+                  </div>
+                  {activeResult.candidateMedications.map((m) => {
+                    const check = checkDosageTolerance(m, patient.dosageToleranceThresholds);
+                    if (!check.isExceeded || !check.threshold) return null;
+                    return (
+                      <div key={m.id} className="text-xs text-slate-800 pl-6 space-y-1 bg-white/80 p-2.5 rounded-lg border border-rose-200">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-rose-900">
+                            {m.name} ({m.dosage} {m.frequency})
+                          </span>
+                          <span className="px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 text-[10px] font-mono font-bold">
+                            +{check.percentageExceeded}% Over Safe Ceiling
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-600 font-sans">
+                          <strong>Limiting Rationale:</strong> {check.threshold.sourceReason}. Max daily ceiling: {check.threshold.maxDailyDoseMg} {check.threshold.unit}/day (Proposed: {check.proposedDailyDoseMg} {check.threshold.unit}/day).
+                        </p>
+                        {check.threshold.historicalReaction && (
+                          <p className="text-[11px] text-rose-700 italic font-sans">
+                            Historical Patient Record: "{check.threshold.historicalReaction}"
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
               {/* Explainable AI Attribution Summary */}
               <div className="p-4.5 rounded-xl bg-[#F8FAFF] border border-slate-200">
                 <h4 className="text-xs font-mono font-bold text-[#0F172A] uppercase tracking-wider mb-2.5">
@@ -421,6 +491,13 @@ export const SimulationLabView: React.FC<SimulationLabViewProps> = ({
           )}
         </div>
       </div>
+
+      {/* Quantum Execution History Component */}
+      <QuantumExecutionHistory
+        patient={patient}
+        onApplyCandidatesToSimulation={handleApplyCandidatesFromQuantum}
+        onNavigateToOptimizer={() => onNavigate('quantum-optimizer')}
+      />
     </div>
   );
 };
